@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 LE_DIR=$(pwd)
-REPO_DIR=$(dirname ${LE_DIR})
+REPO_DIR=${LE_DIR}
 CERTS=${REPO_DIR}/certs
 CERTS_DATA=${REPO_DIR}/certs-data
+NGINX_CONTAINER=nginx_proxy
 
 _default_conf () {
     local OUTFILE=default.conf
@@ -47,8 +48,8 @@ cd ${REPO_DIR}
 docker-compose build
 docker-compose up -d
 sleep 5s
-docker cp ${LE_DIR}/default.conf nginx:/etc/nginx/conf.d/default.conf
-docker exec nginx /etc/init.d/nginx reload
+docker cp ${LE_DIR}/default.conf ${NGINX_CONTAINER}:/etc/nginx/conf.d/default.conf
+docker exec ${NGINX_CONTAINER} /etc/init.d/nginx reload
 sleep 5s
 cd ${LE_DIR}
 
