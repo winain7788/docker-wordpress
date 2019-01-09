@@ -35,6 +35,7 @@ services:
       - WORDPRESS_TABLE_PREFIX=wp_
       - WORDPRESS_DB_HOST=mysql
       - WORDPRESS_DB_PASSWORD=password
+      - WORDPRESS_DB_USER=root          # new DB user
     links:
       - mysql
     restart: always
