@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
 LE_DIR=$(pwd)
-REPO_DIR=$(dirname ${LE_DIR})
+REPO_DIR=${LE_DIR}
 CERTS=${REPO_DIR}/certs
 CERTS_DATA=${REPO_DIR}/certs-data
+NGINX_CONTAINER=nginx
 
 # certs and certs-data directory expected to already exist and
 # contain prior certificate information
@@ -25,7 +26,7 @@ docker run -t --rm \
     --webroot --webroot-path=/data/letsencrypt
 
 cd ${REPO_DIR}
-docker-compose kill -s HUP nginx
+docker-compose kill -s HUP ${NGINX_CONTAINER}
 cd ${LE_DIR}
 
 exit 0;
