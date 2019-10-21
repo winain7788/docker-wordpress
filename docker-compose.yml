@@ -29,6 +29,7 @@ services:
     image: wordpress:php7.2-fpm
     container_name: wordpress
     volumes:
+      - ./php/php.ini:/usr/local/etc/php/php.ini
       - ./wordpress:/var/www/html
     environment:
       - WORDPRESS_DB_NAME=wordpress
