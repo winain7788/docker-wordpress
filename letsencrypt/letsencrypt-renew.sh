@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 
-LE_DIR=$(pwd)
-REPO_DIR=${LE_DIR}
+REPO_DIR=$(pwd)
 CERTS=${REPO_DIR}/certs
 CERTS_DATA=${REPO_DIR}/certs-data
 NGINX_CONTAINER=nginx
@@ -27,6 +26,5 @@ docker run -t --rm \
 
 cd ${REPO_DIR}
 docker-compose kill -s HUP ${NGINX_CONTAINER}
-cd ${LE_DIR}
 
 exit 0;

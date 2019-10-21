@@ -1,28 +1,8 @@
 #!/usr/bin/env bash
 
-LE_DIR=$(pwd)
-REPO_DIR=${LE_DIR}
+REPO_DIR=$(pwd)
 CERTS=${REPO_DIR}/certs
 CERTS_DATA=${REPO_DIR}/certs-data
-NGINX_CONTAINER=nginx
-
-_default_conf () {
-    local OUTFILE=default.conf
-    echo "server {" > $OUTFILE
-    echo "    listen      80;" >> $OUTFILE
-    echo "    listen [::]:80;" >> $OUTFILE
-    echo "    server_name ${DOMAIN_NAME};" >> $OUTFILE
-    echo "" >> $OUTFILE
-    echo "    location / {" >> $OUTFILE
-    echo "        rewrite ^ https://\$host\$request_uri? permanent;" >> $OUTFILE
-    echo "    }" >> $OUTFILE
-    echo "" >> $OUTFILE
-    echo "    location ^~ /.well-known {" >> $OUTFILE
-    echo "        allow all;" >> $OUTFILE
-    echo "        root  /data/letsencrypt/;" >> $OUTFILE
-    echo "    }" >> $OUTFILE
-    echo "}" >> $OUTFILE
-}
 
 # DOMAIN_NAME should not include prefix of www.
 if [ "$#" -ne 1 ]; then
@@ -31,6 +11,11 @@ if [ "$#" -ne 1 ]; then
 else
     DOMAIN_NAME=$1
 fi
+
+WILD_DOMAIN_NAME="*.${DOMAIN_NAME}"
+
+echo "Domain: ${DOMAIN_NAME}"
+echo "Wildcard Domain: ${WILD_DOMAIN_NAME}"
 
 if [ ! -d "${CERTS}" ]; then
     echo "INFO: making certs directory"
@@ -42,36 +27,20 @@ if [ ! -d "${CERTS_DATA}" ]; then
     mkdir ${CERTS_DATA}
 fi
 
-# Launch Nginx container with CERTS and CERTS_DATA mounts
-_default_conf
-cd ${REPO_DIR}
-docker-compose build
-docker-compose up -d
-sleep 5s
-docker cp ${LE_DIR}/default.conf ${NGINX_CONTAINER}:/etc/nginx/conf.d/default.conf
-docker exec ${NGINX_CONTAINER} /etc/init.d/nginx reload
-sleep 5s
-cd ${LE_DIR}
-
 docker run -it --rm \
     -v ${CERTS}:/etc/letsencrypt \
     -v ${CERTS_DATA}:/data/letsencrypt \
     certbot/certbot \
     certonly \
-    --webroot --webroot-path=/data/letsencrypt \
-    -d ${DOMAIN_NAME} -d www.${DOMAIN_NAME}
+    --manual --preferred-challenges dns \
+    --manual-public-ip-logging-ok \
+    -d ${WILD_DOMAIN_NAME} -d ${DOMAIN_NAME}
 
-cd ${REPO_DIR}
-docker-compose stop
-docker-compose rm -f
-cd ${LE_DIR}
-rm -f ${REPO_DIR}/nginx/default.conf
-
-echo "INFO: update the nginx/wordpress_ssl.conf file"
-echo "-  4:   server_name ${DOMAIN_NAME};"
-echo "- 19:   server_name               ${DOMAIN_NAME} www.${DOMAIN_NAME};"
-echo "- 46:   ssl_certificate           /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;"
-echo "- 47:   ssl_certificate_key       /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;"
-echo "- 48:   ssl_trusted_certificate   /etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem;"
+echo "INFO: update the nginx config file"
+echo "-  4:    server_name ${DOMAIN_NAME};"
+echo "- 19:    server_name               ${DOMAIN_NAME};"
+echo "- 46:    ssl_certificate           /etc/letsencrypt/live/${DOMAIN_NAME}/fullchain.pem;"
+echo "- 47:    ssl_certificate_key       /etc/letsencrypt/live/${DOMAIN_NAME}/privkey.pem;"
+echo "- 48:    ssl_trusted_certificate   /etc/letsencrypt/live/${DOMAIN_NAME}/chain.pem;"
 
 exit 0;
