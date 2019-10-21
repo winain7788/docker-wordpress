@@ -26,7 +26,7 @@ services:
     restart: always
 
   wordpress:
-    image: wordpress:php7.2-fpm
+    image: wordpress:php7.3-fpm
     container_name: wordpress
     volumes:
       - ./php/php.ini:/usr/local/etc/php/php.ini
